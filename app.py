@@ -561,6 +561,7 @@ fig = px.bar(
     y=["Consommation (kWh)", "Production PV (kWh)"],
     barmode="group",
     labels={"value": "kWh", "variable": ""},
+    color_discrete_sequence=["#E74C3C", "#F1C40F"]   # rouge / jaune
 )
 st.plotly_chart(fig, use_container_width=True)
 st.dataframe(df_month)
@@ -605,6 +606,7 @@ fig2 = px.line(
     y=["Consommation (kWh)", "Production PV (kWh)", "Autoconsommation (kWh)"],
     markers=True,
     labels={"value": "kWh", "variable": ""},
+    color_discrete_sequence=["#E74C3C", "#F1C40F", "#2ECC71"]  # rouge / jaune / vert
 )
 st.plotly_chart(fig2, use_container_width=True)
 st.dataframe(df_hour)
