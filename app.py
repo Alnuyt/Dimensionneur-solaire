@@ -627,25 +627,6 @@ if opt_result is not None and inv_elec is not None:
     voc_ok = voc_string <= Vdc_max
     vmp_ok = (vmp_string >= Vmpp_min) and (vmp_string <= Vmpp_max)
 
-col_a, col_b, col_c = st.columns(3)
-with col_a:
-    if voc_string is not None:
-        st.metric("Voc string (froid)", f"{voc_string:.1f} V")
-        st.write(f"Vdc_max onduleur = {Vdc_max:.0f} V")
-with col_b:
-    if vmp_string is not None:
-        st.metric("Vmp string (chaud)", f"{vmp_string:.1f} V")
-        st.write(f"Plage MPPT = {Vmpp_min:.0f} – {Vmpp_max:.0f} V")
-with col_c:
-    if voc_ok is not None and vmp_ok is not None:
-        if voc_ok and vmp_ok:
-            st.success("Tensions string conformes.")
-        else:
-            if not voc_ok:
-                st.error("⚠ Voc string à froid dépasse Vdc_max onduleur.")
-            if not vmp_ok:
-                st.error("⚠ Vmp string à chaud hors plage MPPT.")
-
 # ----------------------------------------------------
 # SCHÉMA DU STRING
 # ----------------------------------------------------
