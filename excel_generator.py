@@ -260,7 +260,6 @@ def generate_workbook_bytes(config: dict) -> bytes:
 
     _autofit(ws_sy, max_col=4)
 
-    # ---------------- SAUVEGARDE EN MEMOIRE ----------------
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
