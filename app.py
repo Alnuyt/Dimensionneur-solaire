@@ -120,107 +120,99 @@ def get_hourly_profile(profile_name: str):
 
     return np.ones(24) / 24
 
-
-def make_string_diagram(panel_id, n_series, inverter_id, grid_type,
-                        n_strings=1, nb_mppt=2):
+def make_string_diagram(panel_id, n_series, n_strings, inverter_id, grid_type, nb_mppt=2):
     """
-    Schéma interactif : 1 ou 2 strings -> MPPT -> onduleur.
-    - Chaque panneau est un rectangle.
-    - On visualise clairement chaque string et son MPPT.
+    Schéma simple et lisible :
+    - 1 bloc par string avec "String 1 : N x panneau"
+    - 1 ou plusieurs MPPT
+    - 1 bloc onduleur
     """
     fig = go.Figure()
 
-    panel_w = 0.35
-    panel_h = 0.5
-    spacing_x = 0.45
-    spacing_y = 1.2
+    # Positions horizontales
+    x_string = 0.0
+    x_mppt = 2.5
+    x_inverter = 5.0
 
-    mppt_x = n_series * spacing_x + 1.2
-    inverter_x = mppt_x + 2.2
+    # Espacement vertical
+    y_step = 1.5
+    n_rows = max(n_strings, nb_mppt)
+    total_height = (n_rows - 1) * y_step
+    y_center = total_height / 2
 
-    # Dessin des strings
+    # --- Strings ---
     for s in range(n_strings):
-        y_base = s * spacing_y
-        for i in range(n_series):
-            x = i * spacing_x
-            fig.add_shape(
-                type="rect",
-                x0=x, y0=y_base, x1=x + panel_w, y1=y_base + panel_h,
-                line=dict(color="black")
-            )
-            if i == 0:
-                fig.add_annotation(
-                    x=x + panel_w/2,
-                    y=y_base + panel_h + 0.2,
-                    text=f"String {s+1}",
-                    showarrow=False,
-                    font=dict(size=10, color="green"),
-                )
-
-        fig.add_annotation(
-            x=(n_series * spacing_x)/2,
-            y=y_base + panel_h/2,
-            text=f"{n_series} x {panel_id}",
-            showarrow=False,
-            font=dict(size=8),
-        )
-
-    # MPPTs
-    for m in range(nb_mppt):
-        y_mppt = (m * spacing_y) + 0.1
+        y = y_center - s * y_step
+        # bloc string
         fig.add_shape(
             type="rect",
-            x0=mppt_x, y0=y_mppt,
-            x1=mppt_x + 1.2, y1=y_mppt + 0.7,
+            x0=x_string, y0=y - 0.4,
+            x1=x_string + 1.8, y1=y + 0.4,
+            line=dict(color="green", width=2),
+        )
+        fig.add_annotation(
+            x=x_string + 0.9,
+            y=y,
+            text=f"String {s+1}\n{n_series} x {panel_id}",
+            showarrow=False,
+            font=dict(size=10, color="green"),
+        )
+
+    # --- MPPT ---
+    for m in range(nb_mppt):
+        y = y_center - m * y_step
+        fig.add_shape(
+            type="rect",
+            x0=x_mppt, y0=y - 0.4,
+            x1=x_mppt + 1.5, y1=y + 0.4,
             line=dict(color="blue", width=2),
         )
         fig.add_annotation(
-            x=mppt_x + 0.6,
-            y=y_mppt + 0.35,
+            x=x_mppt + 0.75,
+            y=y,
             text=f"MPPT {m+1}",
             showarrow=False,
             font=dict(size=10, color="blue"),
         )
 
-    # Câblage strings -> MPPT
-    for s in range(n_strings):
-        mppt_index = s if s < nb_mppt else 0  # si plus de strings que de MPPT
-        y_string = s * spacing_y + panel_h/2
-        y_mppt = mppt_index * spacing_y + 0.35
-        fig.add_annotation(
-            x=n_series * spacing_x,
-            y=y_string,
-            ax=mppt_x,
-            ay=y_mppt,
-            arrowhead=3,
-            arrowwidth=1.2,
-        )
-
-    # Onduleur
-    height_box = max(n_strings, nb_mppt) * spacing_y + 0.5
+    # --- Onduleur ---
+    label_inv = inverter_id if inverter_id else "Onduleur"
     fig.add_shape(
         type="rect",
-        x0=inverter_x, y0=-0.2,
-        x1=inverter_x + 2.0, y1=height_box,
+        x0=x_inverter, y0=y_center - 1.0,
+        x1=x_inverter + 2.0, y1=y_center + 1.0,
         line=dict(color="red", width=2),
     )
-    label_inv = inverter_id if inverter_id else "Onduleur"
     fig.add_annotation(
-        x=inverter_x + 1.0,
-        y=height_box/2,
+        x=x_inverter + 1.0,
+        y=y_center,
         text=f"{label_inv}\n{grid_type}",
         showarrow=False,
         font=dict(size=11, color="red"),
     )
 
-    # Câblage MPPT -> Onduleur
-    for m in range(nb_mppt):
-        y_mppt = m * spacing_y + 0.35
+    # --- Câblage Strings -> MPPT ---
+    for s in range(n_strings):
+        mppt_index = s if s < nb_mppt else 0  # si plus de strings que de MPPT
+        y_string = y_center - s * y_step
+        y_mppt = y_center - mppt_index * y_step
         fig.add_annotation(
-            x=mppt_x + 1.2,
-            y=y_mppt,
-            ax=inverter_x,
+            x=x_string + 1.8,
+            y=y_string,
+            ax=x_mppt,
             ay=y_mppt,
+            arrowhead=3,
+            arrowwidth=1.2,
+        )
+
+    # --- Câblage MPPT -> Onduleur ---
+    for m in range(nb_mppt):
+        y_mppt = y_center - m * y_step
+        fig.add_annotation(
+            x=x_mppt + 1.5,
+            y=y_mppt,
+            ax=x_inverter,
+            ay=y_center,
             arrowhead=3,
             arrowwidth=1.2,
         )
@@ -228,11 +220,10 @@ def make_string_diagram(panel_id, n_series, inverter_id, grid_type,
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
     fig.update_layout(
-        height=300 + (n_strings - 1) * 80,
+        height=280 + (n_rows - 1) * 40,
         margin=dict(l=20, r=20, t=20, b=20),
         showlegend=False,
     )
-
     return fig
 
 
