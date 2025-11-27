@@ -157,8 +157,9 @@ def optimize_strings(
     """
     Optimisation automatique des strings :
     - calcule N_series, N_strings, répartition par MPPT
-    - respecte Standard Sigen : max 2 strings / MPPT
+    - Standard Sigen : max 2 strings / MPPT
     - vérifie Voc_froid, Vmp_chaud, courant MPPT, ratio DC/AC
+    - N_series >= 6 pour éviter les strings trop courts
     """
     Voc = panel["Voc"]
     Vmp = panel["Vmp"]
@@ -182,6 +183,9 @@ def optimize_strings(
 
     N_series_max = math.floor(Vdc_max / (Voc * voc_factor_cold))
     N_series_min = math.ceil(Vmpp_min / (Vmp * vmp_factor_hot))
+
+    # On impose au moins 6 modules par string
+    N_series_min = max(N_series_min, 6)
 
     if N_series_max < 1 or N_series_min > N_series_max:
         return None  # impossible
@@ -232,14 +236,20 @@ def optimize_strings(
             if ratio_dc_ac < ratio_dc_ac_min or ratio_dc_ac > ratio_dc_ac_max:
                 continue
 
-            # score : ratio proche cible + N_used max + mppt équilibrés
+            # score :
+            # - ratio proche de la cible
+            # - plus de panneaux utilisés
+            # - moins de strings (on préfère 1 string de 8 plutôt que 2x4)
+            # - strings équilibrés sur les MPPT
             penalty_ratio = abs(ratio_dc_ac - ratio_dc_ac_target)
             imbalance = max(strings_per_mppt) - min(strings_per_mppt)
 
             score = (
                 -10 * penalty_ratio        # ratio proche cible
-                + N_used * 0.01            # plus de panneaux utilisés
+                + N_used * 0.02            # plus de panneaux câblés
+                - 5 * (N_strings - 1)      # pénalise le fait d'avoir plusieurs strings
                 - 2 * imbalance            # pénalise déséquilibre MPPT
+                + 0.5 * N_series           # encourage des strings plus longs
             )
 
             if score > best_score:
@@ -334,7 +344,7 @@ def make_string_diagram(panel_id, opt_result, inverter_id, grid_type, nb_mppt):
     )
 
     # --- Câblage Strings -> MPPT ---
-    # on affecte les strings aux MPPT dans l'ordre
+    # affectation des strings aux MPPT dans l'ordre
     mppt_assign = []
     for m, count in enumerate(strings_per_mppt):
         mppt_assign.extend([m] * count)
@@ -381,7 +391,8 @@ with st.sidebar:
     st.markdown("### 🔧 Paramètres généraux")
 
     panel_id = st.selectbox("Panneau", options=PANEL_IDS, index=0)
-    n_modules = st.number_input("Nombre de panneaux", min_value=1, max_value=100, value=12)
+    # Minimum 6 panneaux
+    n_modules = st.number_input("Nombre de panneaux", min_value=6, max_value=100, value=12)
 
     grid_type = st.selectbox("Type de réseau", options=["Mono", "Tri 3x400"], index=0)
 
@@ -430,7 +441,7 @@ with st.sidebar:
 p_stc = get_panel_power(panel_id)
 p_dc_total_theoretical = p_stc * n_modules
 
-# Sélection / recommandation onduleur (comme avant)
+# Sélection / recommandation onduleur
 recommended = get_recommended_inverter(p_dc_total_theoretical, grid_type, max_dc_ac)
 
 inv_options = []
@@ -468,7 +479,7 @@ if opt_result is not None:
     p_dc_total = opt_result["P_dc"]
     ratio_dc_ac = opt_result["ratio_dc_ac"]
 else:
-    # fallback : on considère tous les panneaux en série unique (non optimal, mais au moins défini)
+    # fallback théorique si optimisation impossible
     N_series = int(n_modules)
     N_strings = 1
     N_used = int(n_modules)
@@ -599,10 +610,8 @@ st.plotly_chart(fig2, use_container_width=True)
 st.dataframe(df_hour)
 
 # ----------------------------------------------------
-# VÉRIFICATION STRING (Voc / Vmp)
+# (Vérification électrique affichée sans gros titre "Vérification du string")
 # ----------------------------------------------------
-st.markdown("## ⚡ Vérification du string (Voc froid / Vmp chaud)")
-
 voc_string = None
 vmp_string = None
 voc_ok = None
@@ -622,7 +631,7 @@ col_a, col_b, col_c = st.columns(3)
 with col_a:
     if voc_string is not None:
         st.metric("Voc string (froid)", f"{voc_string:.1f} V")
-        st.write(f"Limite onduleur Vdc_max = {Vdc_max:.0f} V")
+        st.write(f"Vdc_max onduleur = {Vdc_max:.0f} V")
 with col_b:
     if vmp_string is not None:
         st.metric("Vmp string (chaud)", f"{vmp_string:.1f} V")
@@ -630,12 +639,12 @@ with col_b:
 with col_c:
     if voc_ok is not None and vmp_ok is not None:
         if voc_ok and vmp_ok:
-            st.success("Configuration conforme : tension OK à froid et à chaud.")
+            st.success("Tensions string conformes.")
         else:
             if not voc_ok:
-                st.error("⚠ Voc string à froid dépasse Vdc_max de l’onduleur.")
+                st.error("⚠ Voc string à froid dépasse Vdc_max onduleur.")
             if not vmp_ok:
-                st.error("⚠ Vmp string à chaud en dehors de la plage MPPT.")
+                st.error("⚠ Vmp string à chaud hors plage MPPT.")
 
 # ----------------------------------------------------
 # SCHÉMA DU STRING
@@ -667,7 +676,7 @@ config = {
     "consumption_profile": consumption_profile,
     "t_min": float(t_min),
     "t_max": float(t_max),
-    # on envoie N_series auto pour que l’onglet “Strings” soit cohérent
+    # N_series auto pour cohérence avec l’onglet Strings d’Excel
     "n_series": int(N_series),
     "inverter_id": inverter_id,
 }
