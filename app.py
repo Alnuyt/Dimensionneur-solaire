@@ -45,6 +45,25 @@ def monthly_consumption_profile(annual_kwh: float, profile: str):
     perc = perc / perc.sum()  # normalisation légère
     return annual_kwh * perc
 
+def get_recommended_inverter():
+    best = None
+    panels, inverters, batteries = get_catalog()
+    for inv in inverters:
+        inv_id, p_ac, p_dc_max, vmin, vmax, vdcmax, imppt, mppts, inv_type = inv
+
+        # Filtrer par type de réseau
+        if inv_type != grid_type:
+            continue
+
+        # Vérifier ratio DC/AC
+        ratio = p_dc_total / p_ac
+        if ratio <= max_dc_ac:
+            best = inv_id
+            break
+
+    return best
+recommended_inverter = get_recommended_inverter()
+
 
 # ===================== INTERFACE =====================
 
@@ -61,6 +80,24 @@ with st.sidebar:
     battery_kwh = st.slider("Capacité batterie (kWh)", 2.0, 20.0, 6.0, 0.5) if battery_enabled else 0.0
 
     max_dc_ac = st.slider("Ratio DC/AC max", 1.0, 1.5, 1.30, 0.01)
+
+    st.markdown("---")
+    st.markdown("### Sélection de l’onduleur")
+    
+    inv_list = ["(Auto) " + recommended_inverter] if recommended_inverter else []
+    inv_list += [inv[0] for inv in INVERTERS if inv[8] == grid_type]
+    
+    selected_inverter = st.selectbox(
+        "Onduleur choisi",
+        options=inv_list,
+        index=0 if recommended_inverter else 0
+    )
+    
+    # Déterminer l’onduleur réel (auto ou sélection manuelle)
+    if selected_inverter.startswith("(Auto)"):
+        inverter_id = recommended_inverter
+    else:
+        inverter_id = selected_inverter
 
     st.markdown("---")
     annual_consumption = st.number_input("Consommation annuelle client (kWh)", min_value=500, max_value=20000, value=3500, step=100)
@@ -186,6 +223,7 @@ config = {
     "battery_enabled": battery_enabled,
     "battery_kwh": float(battery_kwh),
     "max_dc_ac": float(max_dc_ac),
+    "inverter_id": inverter_id,
     "annual_consumption": float(annual_consumption),
     "consumption_profile": consumption_profile,
     "t_min": float(t_min),
