@@ -57,29 +57,6 @@ Inclut :
 
 ---
 
-## 📦 Installation locale
-
-### 1. Cloner le projet
-```bash
-git clone <votre_repo>
-cd dimensionneur-solaire
-```
-
-### 2. Installer les dépendances
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Lancer l’application
-```bash
-streamlit run app.py
-```
-
-L’application s’ouvre sur :  
-http://localhost:8501
-
----
-
 ## 📁 Structure du projet
 
 ```
