@@ -103,7 +103,7 @@ def generate_workbook_bytes(config: dict) -> bytes:
     ws_cat.append([""])
     ws_cat.append(["Onduleurs"])
     ws_cat.append(["ID", "P_AC_nom", "P_DC_max", "V_MPP_min", "V_MPP_max",
-                   "V_DC_max", "I_MPPT", "Nb_MPPT", "Type_reseau"])
+                   "V_DC_max", "I_MPPT", "Nb_MPPT", "Type_reseau", "Famille"])
     first_inv_row = ws_cat.max_row + 1
     for inv in inverters:
         ws_cat.append(list(inv))
