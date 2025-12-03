@@ -439,7 +439,7 @@ with col_logo:
         st.image("logo_horizon.png", use_column_width=True)
 
 with col_title:
-    st.title("Dimensionneur Solaire Sigen – Horizon Énergie")
+    st.title("Dimensionneur Solaire Sigen")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
