@@ -224,10 +224,10 @@ with st.sidebar:
     instore = st.selectbox("Compatible SigenStore ?", ["Auto", "Oui", "Non"])
     fam_pref = None if instore == "Auto" else ("Store" if instore == "Oui" else "Hybride")
 
-    max_dc_ac = st.slider("Ratio DC/AC max", 1.0, 1.5, 1.30)
+    max_dc_ac = st.slider("Ratio DC/AC max", 1.0, 1.7, 1.35)
 
     battery_enabled = st.checkbox("Batterie ?", False)
-    battery_kwh = st.slider("Capacité batterie (kWh)", 2.0, 20.0, 6.0) if battery_enabled else 0
+    battery_kwh = st.slider("Capacité batterie (kWh)", 6.0, 50.0, 6.0) if battery_enabled else 0
 
     st.markdown("---")
     st.markdown("### Chauffage & Conso")
