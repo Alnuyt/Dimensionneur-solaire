@@ -292,17 +292,23 @@ def select_best_inverter(
     return best
 
 
-# ----------------------------------------------------
-# SIDEBAR – INPUTS
-# ----------------------------------------------------
 with st.sidebar:
     st.markdown("### 🔧 Paramètres généraux")
 
+    # Sélection panneau
     panel_id = st.selectbox("Panneau", options=PANEL_IDS, index=0)
     n_modules = st.number_input("Nombre de panneaux", min_value=6, max_value=100, value=12)
 
+    # Récupération des données du panneau (IMPORTANT : doit être avant select_best_inverter)
+    panel_elec = get_panel_elec(panel_id)
+    if panel_elec is None:
+        st.error("Panneau introuvable dans le catalogue.")
+        st.stop()
+
+    # Type réseau
     grid_type = st.selectbox("Type de réseau", options=["Mono", "Tri 3x230", "Tri 3x400"], index=0)
 
+    # Mode Store / Hybride
     sigenstore_mode = st.selectbox(
         "Installation compatible SigenStore ?",
         options=["Auto", "Oui (Store)", "Non (Hybride)"],
@@ -315,47 +321,29 @@ with st.sidebar:
     else:
         fam_pref = None
 
+    # Ratio
     max_dc_ac = st.slider("Ratio DC/AC max", min_value=1.0, max_value=1.5, value=1.35, step=0.01)
-
-    battery_enabled = st.checkbox("Batterie", value=False)
-    if battery_enabled:
-        battery_kwh = st.slider("Capacité batterie (kWh)", 2.0, 20.0, 6.0, 0.5)
-    else:
-        battery_kwh = 0.0
 
     st.markdown("---")
     st.markdown("### Profil de consommation")
-
-    annual_consumption = st.number_input(
-        "Consommation annuelle (kWh)",
-        min_value=500,
-        max_value=20000,
-        value=3500,
-        step=100,
-    )
-    consumption_profile = st.selectbox(
-        "Profil mensuel",
-        options=["Standard", "Hiver fort", "Été fort"],
-        index=0,
-    )
+    annual_consumption = st.number_input("Conso annuelle (kWh)", 500, 20000, 3500, 100)
+    consumption_profile = st.selectbox("Profil mensuel", ["Standard", "Hiver fort", "Été fort"], 0)
     hourly_profile_choice = st.selectbox(
-        "Profil horaire",
-        options=["Uniforme", "Classique (matin + soir)", "Travail journée (soir fort)", "Télétravail"],
-        index=1,
+        "Profil horaire", 
+        ["Uniforme", "Classique (matin + soir)", "Travail journée (soir fort)", "Télétravail"],
+        1
     )
-
-    month_for_hours = st.slider("Mois pour le profil horaire", min_value=1, max_value=12, value=6)
+    month_for_hours = st.slider("Mois pour le profil horaire", 1, 12, 6)
 
     st.markdown("---")
-    st.markdown("### Températures de calcul (tensions)")
+    st.markdown("### Températures de calcul")
+    t_min = st.number_input("Température min (°C)", -30, 10, -10)
+    t_max = st.number_input("Température max (°C)", 30, 90, 70)
 
-    t_min = st.number_input("Température min (°C)", min_value=-30, max_value=10, value=-10)
-    t_max = st.number_input("Température max (°C)", min_value=30, max_value=90, value=70)
-    
     st.markdown("---")
     st.markdown("### Choix de l’onduleur")
-    
-    # Sélection automatique du meilleur onduleur
+
+    # 🔍 Sélection automatique de l’onduleur → maintenant que tous les inputs existent
     best = select_best_inverter(
         panel=panel_elec,
         n_panels=int(n_modules),
@@ -365,25 +353,25 @@ with st.sidebar:
         T_min=float(t_min),
         T_max=float(t_max),
     )
-    
+
     if best is None:
         st.error("Aucun onduleur compatible trouvé avec cette configuration.")
         st.stop()
-    
+
     auto_inv_id = best["inv_id"]
-    
-    # Liste filtrée selon le type réseau et la famille
+
+    # Liste compatible
     compatible_inv = [
         inv[0] for inv in INVERTERS
         if inv[8] == grid_type and (fam_pref is None or inv[9] == fam_pref)
     ]
-    
-    # Ajoute l’option automatique en haut
+
     inv_options = [f"(Auto) {auto_inv_id}"] + compatible_inv
-    
+
     selected_inv_label = st.selectbox("Onduleur", inv_options, index=0)
-    
-    if selected_inv_label.startswith("(Auto) "):
+
+    # Détermination finale de l’onduleur
+    if selected_inv_label.startswith("(Auto)"):
         inverter_id = auto_inv_id
     else:
         inverter_id = selected_inv_label
