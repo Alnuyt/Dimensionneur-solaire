@@ -351,6 +351,42 @@ with st.sidebar:
 
     t_min = st.number_input("Température min (°C)", min_value=-30, max_value=10, value=-10)
     t_max = st.number_input("Température max (°C)", min_value=30, max_value=90, value=70)
+    
+    st.markdown("---")
+    st.markdown("### Choix de l’onduleur")
+    
+    # Sélection automatique du meilleur onduleur
+    best = select_best_inverter(
+        panel=panel_elec,
+        n_panels=int(n_modules),
+        grid_type=grid_type,
+        max_dc_ac=float(max_dc_ac),
+        fam_pref=fam_pref,
+        T_min=float(t_min),
+        T_max=float(t_max),
+    )
+    
+    if best is None:
+        st.error("Aucun onduleur compatible trouvé avec cette configuration.")
+        st.stop()
+    
+    auto_inv_id = best["inv_id"]
+    
+    # Liste filtrée selon le type réseau et la famille
+    compatible_inv = [
+        inv[0] for inv in INVERTERS
+        if inv[8] == grid_type and (fam_pref is None or inv[9] == fam_pref)
+    ]
+    
+    # Ajoute l’option automatique en haut
+    inv_options = [f"(Auto) {auto_inv_id}"] + compatible_inv
+    
+    selected_inv_label = st.selectbox("Onduleur", inv_options, index=0)
+    
+    if selected_inv_label.startswith("(Auto) "):
+        inverter_id = auto_inv_id
+    else:
+        inverter_id = selected_inv_label
 
 
 # ----------------------------------------------------
