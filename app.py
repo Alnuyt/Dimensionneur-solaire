@@ -331,6 +331,51 @@ fig = px.bar(df, x="Mois", y=["Consommation", "Production PV"])
 st.plotly_chart(fig, use_container_width=True)
 
 # ----------------------------------------------------
+# PROFIL HORAIRE – JOUR TYPE
+# ----------------------------------------------------
+st.markdown("## 🕒 Profil horaire – jour type")
+
+days_in_month = np.array([31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+idx = month_for_hours - 1
+
+day_cons = cons_monthly[idx] / days_in_month[idx]
+day_pv = pv_monthly[idx] / days_in_month[idx]
+
+cons_frac = get_hourly_profile(horaire_profile)
+cons_hour = day_cons * cons_frac
+
+pv_frac = np.array([
+    0, 0, 0, 0, 0,
+    0.01, 0.04, 0.07, 0.10, 0.13, 0.14, 0.14,
+    0.13, 0.10, 0.07, 0.04, 0.02,
+    0, 0, 0, 0, 0, 0, 0,
+])
+if pv_frac.sum() > 0:
+    pv_frac = pv_frac / pv_frac.sum()
+pv_hour = day_pv * pv_frac
+
+autocons_hour = np.minimum(cons_hour, pv_hour)
+
+hours = np.arange(24)
+df_hour = pd.DataFrame({
+    "Heure": hours,
+    "Consommation (kWh)": cons_hour,
+    "Production PV (kWh)": pv_hour,
+    "Autoconsommation (kWh)": autocons_hour,
+})
+
+fig2 = px.line(
+    df_hour,
+    x="Heure",
+    y=["Consommation (kWh)", "Production PV (kWh)", "Autoconsommation (kWh)"],
+    markers=True,
+    labels={"value": "kWh", "variable": ""},
+    color_discrete_sequence=["#E74C3C", "#F1C40F", "#2ECC71"]  # rouge / jaune / vert
+)
+st.plotly_chart(fig2, use_container_width=True)
+st.dataframe(df_hour)
+
+# ----------------------------------------------------
 # EXPORT EXCEL
 # ----------------------------------------------------
 st.markdown("## 📥 Export Excel")
