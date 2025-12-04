@@ -4,6 +4,9 @@ from openpyxl.utils import get_column_letter
 
 
 def get_catalog():
+    # ----------------------------------------------------
+    # PANNEAUX
+    # ----------------------------------------------------
     panels = [
         ["Trina450", 450, 52.9, 44.6, 10.74, 10.09, -0.24],
         ["Trina500", 500, 40.1, 38.3, 15.03, 12.18, -0.24],
@@ -14,71 +17,63 @@ def get_catalog():
     ]
 
     # ----------------------------------------------------
-    # ONDULEURS SIGEN – catalogue complet
+    # SIGENERGY — ONDULEURS COMPLETS CORRIGÉS
     # Format :
-    # (ID, P_AC_nom, P_DC_max, V_MPP_min, V_MPP_max,
-    #  V_DC_max, I_MPPT, Nb_MPPT, Type_reseau, Famille)
-    # Famille = "Hybride" ou "Store"
+    # (ID, P_AC_nom, P_DC_max, V_MPP_min, V_MPP_max, V_DC_max,
+    #  I_MPPT, Nb_MPPT, Type_reseau, Famille, V_nom_dc)
     # ----------------------------------------------------
-    default_mpp_min = 50
-    default_mpp_max = 550
-    default_vdcmax = 600
-    default_imppt = 16
-    default_mppt = 2
 
-    # ----------------------------------------------------
-    # ONDULEURS SIGEN – catalogue complet (corrigé)
-    # ----------------------------------------------------
     inverters = [
         # --- MONO Hybride ---
-        ("Hybride2.0Mono", 2000, 4000, 50, 550, 600, 16, 2, "Mono", "Hybride"),
-        ("Hybride3.0Mono", 3000, 6000, 50, 550, 600, 16, 2, "Mono", "Hybride"),
-        ("Hybride6.0Mono", 6000, 12000, 50, 550, 600, 16, 3, "Mono", "Hybride"),
-    
+        ("Hybride2.0Mono", 2000, 4000, 50, 550, 600, 16, 2, "Mono", "Hybride", 350),
+        ("Hybride3.0Mono", 3000, 6000, 50, 550, 600, 16, 2, "Mono", "Hybride", 350),
+        ("Hybride6.0Mono", 6000, 12000, 50, 550, 600, 16, 3, "Mono", "Hybride", 350),
+
         # --- MONO Store ---
-        ("Store3.0Mono", 3000, 6000, 50, 550, 600, 16, 2, "Mono", "Store"),
-        ("Store3.6Mono", 3680, 7360, 50, 550, 600, 16, 2, "Mono", "Store"),
-        ("Store4.0Mono", 4000, 8000, 50, 550, 600, 16, 2, "Mono", "Store"),
-        ("Store4.6Mono", 4600, 9200, 50, 550, 600, 16, 2, "Mono", "Store"),
-        ("Store6.0Mono", 6000, 12000, 50, 550, 600, 16, 3, "Mono", "Store"),
-    
-        # --- MONO Store grandes puissances (PDF p.1) ---
-        ("Store8.0Mono", 8000, 16000, 50, 550, 600, 16, 4, "Mono", "Store"),
-        ("Store10.0Mono", 10000, 20000, 50, 550, 600, 16, 4, "Mono", "Store"),
-        ("Store12.0Mono", 12000, 24000, 50, 550, 600, 16, 4, "Mono", "Store"),
-    
-        # --- DELTA Hybride (Tri 3x230) ---
-        ("Hybride3.0Delta", 3000, 6000, 50, 550, 600, 16, 2, "Tri 3x230", "Hybride"),
-        ("Hybride5.0Delta", 5000, 10000, 50, 550, 600, 16, 2, "Tri 3x230", "Hybride"),
-        ("Hybride6.0Delta", 6000, 12000, 50, 550, 600, 16, 3, "Tri 3x230", "Hybride"),
-        ("Hybride8.0Delta", 8000, 16000, 50, 550, 600, 16, 3, "Tri 3x230", "Hybride"),
-        ("Hybride10.0Delta", 10000, 20000, 50, 550, 600, 16, 4, "Tri 3x230", "Hybride"),
-    
-        # --- DELTA Store (Tri 3x230) ---
-        ("Store6.0Delta", 6000, 12000, 50, 550, 600, 16, 2, "Tri 3x230", "Store"),
-        ("Store8.0Delta", 8000, 16000, 50, 550, 600, 16, 3, "Tri 3x230", "Store"),
-    
-        # --- TETRA Hybride (Tri 3x400 haute tension) ---
-        ("Hybride3.0Tetra", 3000, 6000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Hybride"),
-        ("Hybride5.0Tetra", 5000, 10000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Hybride"),
-        ("Hybride6.0Tetra", 6000, 12000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Hybride"),
-        ("Hybride8.0Tetra", 8000, 16000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Hybride"),
-        ("Hybride10.0Tetra", 10000, 20000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride"),
-        ("Hybride12.0Tetra", 12000, 24000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride"),
-        ("Hybride15.0Tetra", 15000, 30000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride"),
-    
-        # --- TETRA Store (Tri 3x400 haute tension) ---
-        ("Store5.0Tetra", 5000, 10000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Store"),
-        ("Store6.0Tetra", 6000, 12000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Store"),
-        ("Store8.0Tetra", 8000, 16000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Store"),
-        ("Store10.0Tetra", 10000, 20000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
-        ("Store15.0Tetra", 15000, 30000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
-        ("Store17.0Tetra", 17000, 34000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
-        ("Store20.0Tetra", 20000, 40000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
-        ("Store25.0Tetra", 25000, 50000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
-        ("Store30.0Tetra", 30000, 60000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store"),
+        ("Store3.0Mono", 3000, 6000, 50, 550, 600, 16, 2, "Mono", "Store", 350),
+        ("Store3.6Mono", 3680, 7360, 50, 550, 600, 16, 2, "Mono", "Store", 350),
+        ("Store4.0Mono", 4000, 8000, 50, 550, 600, 16, 2, "Mono", "Store", 350),
+        ("Store4.6Mono", 4600, 9200, 50, 550, 600, 16, 2, "Mono", "Store", 350),
+        ("Store6.0Mono", 6000, 12000, 50, 550, 600, 16, 3, "Mono", "Store", 350),
+        ("Store8.0Mono", 8000, 16000, 50, 550, 600, 16, 4, "Mono", "Store", 350),
+        ("Store10.0Mono", 10000, 20000, 50, 550, 600, 16, 4, "Mono", "Store", 350),
+        ("Store12.0Mono", 12000, 24000, 50, 550, 600, 16, 4, "Mono", "Store", 350),
+
+        # --- TRI 3x230 Hybride ---
+        ("Hybride3.0Delta", 3000, 6000, 50, 550, 600, 16, 2, "Tri 3x230", "Hybride", 360),
+        ("Hybride5.0Delta", 5000, 10000, 50, 550, 600, 16, 2, "Tri 3x230", "Hybride", 360),
+        ("Hybride6.0Delta", 6000, 12000, 50, 550, 600, 16, 3, "Tri 3x230", "Hybride", 360),
+        ("Hybride8.0Delta", 8000, 16000, 50, 550, 600, 16, 3, "Tri 3x230", "Hybride", 360),
+        ("Hybride10.0Delta", 10000, 20000, 50, 550, 600, 16, 4, "Tri 3x230", "Hybride", 360),
+
+        # --- TRI 3x230 Store ---
+        ("Store6.0Delta", 6000, 12000, 50, 550, 600, 16, 2, "Tri 3x230", "Store", 360),
+        ("Store8.0Delta", 8000, 16000, 50, 550, 600, 16, 3, "Tri 3x230", "Store", 360),
+
+        # --- TRI 3x400 Hybride (Haute tension) ---
+        ("Hybride3.0Tetra", 3000, 6000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Hybride", 600),
+        ("Hybride5.0Tetra", 5000, 10000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Hybride", 600),
+        ("Hybride6.0Tetra", 6000, 12000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Hybride", 600),
+        ("Hybride8.0Tetra", 8000, 16000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Hybride", 600),
+        ("Hybride10.0Tetra", 10000, 20000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride", 600),
+        ("Hybride12.0Tetra", 12000, 24000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride", 600),
+        ("Hybride15.0Tetra", 15000, 30000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Hybride", 600),
+
+        # --- TRI 3x400 Store (Haute tension) ---
+        ("Store5.0Tetra", 5000, 10000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Store", 600),
+        ("Store6.0Tetra", 6000, 12000, 160, 1000, 1100, 16, 2, "Tri 3x400", "Store", 600),
+        ("Store8.0Tetra", 8000, 16000, 160, 1000, 1100, 16, 3, "Tri 3x400", "Store", 600),
+        ("Store10.0Tetra", 10000, 20000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
+        ("Store15.0Tetra", 15000, 30000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
+        ("Store17.0Tetra", 17000, 34000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
+        ("Store20.0Tetra", 20000, 40000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
+        ("Store25.0Tetra", 25000, 50000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
+        ("Store30.0Tetra", 30000, 60000, 160, 1000, 1100, 16, 4, "Tri 3x400", "Store", 600),
     ]
 
+    # ----------------------------------------------------
+    # BATTERIES
+    # ----------------------------------------------------
     batteries = [
         ["Sigen6", 6],
         ["Sigen10", 10],
