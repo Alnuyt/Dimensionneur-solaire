@@ -440,19 +440,6 @@ opt_result = optimize_strings(
     T_min=float(t_min),
     T_max=float(t_max),
 )
-# Show string wiring layout
-st.markdown("## 🔌 Câblage des strings")
-
-strings = opt_result["strings"]
-
-for i, s in enumerate(strings):
-    if s > 0:
-        st.write(
-            f"**MPPT {i+1} : {s} modules** "
-            f"(Vmp ≈ {s * panel_elec['Vmp']:.0f} V)"
-        )
-    else:
-        st.write(f"MPPT {i+1} : non utilisé")
 
 # Si impossible → arrêter proprement
 if opt_result is None:
@@ -518,6 +505,25 @@ if opt_result["N_used"] < int(n_modules):
         f"{opt_result['N_used']} panneaux seulement peuvent être câblés proprement sur cet onduleur "
         f"(sur {int(n_modules)} demandés)."
     )
+# ----------------------------------------------------
+# 🔌 Câblage des strings – affichage propre
+# ----------------------------------------------------
+st.markdown("## 🔌 Câblage des strings")
+
+strings = opt_result["strings"]
+
+cols = st.columns(len(strings))
+
+for i, s in enumerate(strings):
+    with cols[i]:
+        if s > 0:
+            st.metric(
+                label=f"MPPT {i+1}",
+                value=f"{s} modules",
+                delta=f"{s * panel_elec['Vmp']:.0f} V"
+            )
+        else:
+            st.metric(label=f"MPPT {i+1}", value="Non utilisé")
 
 # ----------------------------------------------------
 # PROFIL MENSUEL
