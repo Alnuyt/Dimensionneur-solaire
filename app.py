@@ -440,6 +440,19 @@ opt_result = optimize_strings(
     T_min=float(t_min),
     T_max=float(t_max),
 )
+# Show string wiring layout
+st.markdown("## 🔌 Câblage des strings")
+
+strings = opt_result["strings"]
+
+for i, s in enumerate(strings):
+    if s > 0:
+        st.write(
+            f"**MPPT {i+1} : {s} modules** "
+            f"(Vmp ≈ {s * panel_elec['Vmp']:.0f} V)"
+        )
+    else:
+        st.write(f"MPPT {i+1} : non utilisé")
 
 # Si impossible → arrêter proprement
 if opt_result is None:
@@ -587,7 +600,7 @@ config = {
     "consumption_profile": consumption_profile,
     "t_min": float(t_min),
     "t_max": float(t_max),
-    "n_series": int(opt_result["N_series"]),
+    "n_series": int(opt_result["N_series_main"]),
     "inverter_id": inverter_id,
 }
 
