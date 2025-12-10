@@ -1,8 +1,6 @@
-# 🌞 Horizon Énergie – Dimensionneur Solaire Sigen
-
-Outil interactif de dimensionnement photovoltaïque pour installations résidentielles utilisant les onduleurs **Sigen**.
-
-🔗 **Accès direct à l’outil en ligne :**  
+# Sigen Solar Designer
+Interactive photovoltaic sizing tool for residential installations using Sigen inverters.
+## Direct access to the online tool:
 https://dimensionneur-solaire-qvbahekpamth7grjd7wdhw.streamlit.app
 
 
