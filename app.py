@@ -541,7 +541,6 @@ with col2:
 
 with col3:
     st.metric("Taux autocons.", f"{taux_auto:.1f} %")
-    st.metric("Autocons. batterie", f"{autocons_year_batt:.0f} kWh")
     st.metric("Taux couverture", f"{taux_couv:.1f} %")
 
 with col4:
