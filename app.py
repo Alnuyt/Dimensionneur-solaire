@@ -461,15 +461,46 @@ pv_monthly = pv_kwh_per_kwp * p_dc_kwp
 cons_monthly = monthly_consumption_profile(annual_consumption, consumption_profile)
 autocons_monthly = np.minimum(pv_monthly, cons_monthly)
 
+# ----------------------------------------------------
+# 🔋 Autoconsommation via batterie (modèle simplifié)
+# ----------------------------------------------------
+battery_capacity = float(battery_kwh)  # kWh
+battery_soc = 0.0
+autocons_batt_monthly = np.zeros(12)
+
+if battery_capacity > 0:
+
+    for i in range(12):
+        prod = pv_monthly[i]
+        cons = cons_monthly[i]
+
+        # Direct self-consumption
+        direct = min(prod, cons)
+        surplus = prod - direct
+
+        # Charge the battery
+        battery_soc = min(battery_soc + surplus, battery_capacity)
+
+        # Use battery for nighttime deficit
+        deficit = cons - direct
+
+        discharge = min(deficit, battery_soc)
+
+        battery_soc -= discharge
+        autocons_batt_monthly[i] = discharge
+
 months_labels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin",
                  "Juil", "Août", "Sep", "Oct", "Nov", "Déc"]
 
 pv_year = float(pv_monthly.sum())
 cons_year = float(annual_consumption)
-autocons_year = float(autocons_monthly.sum())
+autocons_year_direct = float(autocons_monthly.sum())
+autocons_year_batt = float(autocons_batt_monthly.sum())
 
-taux_auto = (autocons_year / pv_year * 100) if pv_year > 0 else 0.0
-taux_couv = (autocons_year / cons_year * 100) if cons_year > 0 else 0.0
+autocons_year = autocons_year_direct + autocons_year_batt
+
+taux_auto = (autocons_year / pv_year * 100) if pv_year > 0 else 0
+taux_couv = (autocons_year / cons_year * 100) if cons_year > 0 else 0
 
 # ----------------------------------------------------
 # EN-TÊTE / METRICS
@@ -494,6 +525,7 @@ with col2:
 
 with col3:
     st.metric("Taux autocons.", f"{taux_auto:.1f} %")
+    st.metric("Autocons. batterie", f"{autocons_year_batt:.0f} kWh")
     st.metric("Taux couverture", f"{taux_couv:.1f} %")
 
 with col4:
@@ -530,11 +562,15 @@ for i, s in enumerate(strings):
 # ----------------------------------------------------
 st.markdown("## 📊 Production vs Consommation – Profil mensuel")
 
+autocons_total = autocons_monthly + autocons_batt_monthly
+
 df_month = pd.DataFrame({
     "Mois": months_labels,
     "Consommation (kWh)": cons_monthly,
     "Production PV (kWh)": pv_monthly,
-    "Autoconsommation (kWh)": autocons_monthly,
+    "Autocons. directe (kWh)": autocons_monthly,
+    "Autocons. batterie (kWh)": autocons_batt_monthly,
+    "Autocons. totale (kWh)": autocons_total,
 })
 
 fig = px.bar(
